@@ -46,6 +46,7 @@ string startConfig = @"{
     ""skins""
   ],
   ""Skins"": [
+
 ";
 string endConfig = @"  ],
   ""Container Panel Name"": ""generic"",
@@ -92,7 +93,9 @@ string endConfig = @"  ],
 }";
 
 string skinEntries = "";
-foreach (var item in itemSkins.Keys) {
+int current = 0;
+
+for (int i = 0; i < itemSkins.Count; i++) {
     /*
     {
       "Item Shortname": "shortname",
@@ -102,14 +105,27 @@ foreach (var item in itemSkins.Keys) {
       ]
     }
      */
-    skinEntries += $"    {{\n      \"Item Shortname\": \"{idToShortnames[item]}\",\n      \"Permission\": \"\",\n      \"Skins\": [";
-    for (int i = 0; i < itemSkins[item].Count; i++) {
-        SkinEntry entry = itemSkins[item][i];
+    if (!idToShortnames.ContainsKey(itemSkins.Keys.ToList()[i])) continue;
+    skinEntries += $"    {{\n      \"Item Shortname\": \"{idToShortnames[itemSkins.Keys.ToList()[i]]}\",\n      \"Permission\": \"\",\n      \"Skins\": [\n";
+    for (int j = 0; j < itemSkins[itemSkins.Keys.ToList()[i]].Count; j++) {
+        SkinEntry entry = itemSkins[itemSkins.Keys.ToList()[i]][j];
         // get workshop id
+        string skinDetails = await client.GetStringAsync("https:" + entry.EntryLink);
+        HtmlDocument detailsDOM = new HtmlDocument();
+        detailsDOM.LoadHtml(skinDetails);
 
-        skinEntries += $"        {"workshop id here"},\n      ]\n    }}{(i == itemSkins[item].Count - 1 ? "," : "")}";
+        HtmlNode workshopNode = detailsDOM.DocumentNode.SelectSingleNode("/html/body/div[1]/div[2]/div/table/tbody/tr[4]/td[2]/a");
+        if (workshopNode != null) {
+            skinEntries += $"        {workshopNode.InnerHtml}{(j == itemSkins[itemSkins.Keys.ToList()[i]].Count - 1 ? "," : "")}\n      ]\n    }}{(i == itemSkins.Keys.Count - 1 ? "," : "")}\n";
+        } else {
+            Console.WriteLine($"Failed to get workshop ID of {entry.SkinName} : {"https:" + entry.EntryLink}");
+        }
+        current++;
+        Console.WriteLine(current + " / " + 4300 + " something");
     }
 }
+
+File.WriteAllText("Skins.json", startConfig + skinEntries + endConfig);
 
 Console.ReadLine();
 
