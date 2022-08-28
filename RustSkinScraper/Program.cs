@@ -46,7 +46,6 @@ string startConfig = @"{
     ""skins""
   ],
   ""Skins"": [
-
 ";
 string endConfig = @"  ],
   ""Container Panel Name"": ""generic"",
@@ -106,6 +105,7 @@ for (int i = 0; i < itemSkins.Count; i++) {
     }
      */
     if (!idToShortnames.ContainsKey(itemSkins.Keys.ToList()[i])) continue;
+    if (itemSkins[itemSkins.Keys.ToList()[i]].Count == 0) continue;
     skinEntries += $"    {{\n      \"Item Shortname\": \"{idToShortnames[itemSkins.Keys.ToList()[i]]}\",\n      \"Permission\": \"\",\n      \"Skins\": [\n";
     for (int j = 0; j < itemSkins[itemSkins.Keys.ToList()[i]].Count; j++) {
         SkinEntry entry = itemSkins[itemSkins.Keys.ToList()[i]][j];
@@ -116,13 +116,14 @@ for (int i = 0; i < itemSkins.Count; i++) {
 
         HtmlNode workshopNode = detailsDOM.DocumentNode.SelectSingleNode("/html/body/div[1]/div[2]/div/table/tbody/tr[4]/td[2]/a");
         if (workshopNode != null) {
-            skinEntries += $"        {workshopNode.InnerHtml}{(j == itemSkins[itemSkins.Keys.ToList()[i]].Count - 1 ? "," : "")}\n      ]\n    }}{(i == itemSkins.Keys.Count - 1 ? "," : "")}\n";
+            skinEntries += $"        {workshopNode.InnerHtml}{(j == itemSkins[itemSkins.Keys.ToList()[i]].Count - 1 ? "" : ",")}\n";
         } else {
             Console.WriteLine($"Failed to get workshop ID of {entry.SkinName} : {"https:" + entry.EntryLink}");
         }
         current++;
         Console.WriteLine(current + " / " + 4300 + " something");
     }
+    skinEntries += $"      ]\n    }}{(i == itemSkins.Keys.Count - 1 ? "" : ",")}\n";
 }
 
 File.WriteAllText("Skins.json", startConfig + skinEntries + endConfig);
